@@ -67,7 +67,11 @@ func (ex *Exchange) handlePlaceOrder(ctx *fasthttp.RequestCtx) {
 
 	ob := ex.orderbooks[market]
 	order := orderbook.NewOrder(placeOrderReq.Bid, placeOrderReq.Size)
-	ob.PlaceLimitOrder(placeOrderReq.Price, order)
+	if placeOrderReq.Type == LimiteOrder {
+		ob.PlaceLimitOrder(placeOrderReq.Price, order)
+	} else {
+		ob.PlaceMarketOrder(order) // price not needed as market order already executes against the best price
+	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetBodyString(`{"message": "Order placed successfully"}`)
