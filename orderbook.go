@@ -203,7 +203,7 @@ func (ob *OrderBook) PlaceMarketOrder(o *Order) []Match {
 			matches = append(matches, limitMatches...) // this is ellipse similar to JS spread
 
 			if len(limit.Orders) == 0 {
-				ob.clearLimit(true, limit)
+				ob.clearLimit(false, limit)
 			}
 		}
 	} else {
@@ -215,7 +215,7 @@ func (ob *OrderBook) PlaceMarketOrder(o *Order) []Match {
 			matches = append(matches, limitMatches...) // this is ellipse similar to JS spread
 
 			if len(limit.Orders) == 0 {
-				ob.clearLimit(false, limit)
+				ob.clearLimit(true, limit)
 			}
 		}
 	}
@@ -232,7 +232,6 @@ func (ob *OrderBook) PlaceLimitOrder(price float64, o *Order) {
 		limit = ob.AskLimits[price]
 	}
 	if limit == nil {
-		// we initalise the limit
 		limit = NewLimit(price)
 		if o.Bid {
 			ob.bids = append(ob.bids, limit)
