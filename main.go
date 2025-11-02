@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"exchange/orderbook"
+	"fmt"
 
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
@@ -70,7 +71,8 @@ func (ex *Exchange) handlePlaceOrder(ctx *fasthttp.RequestCtx) {
 	if placeOrderReq.Type == LimiteOrder {
 		ob.PlaceLimitOrder(placeOrderReq.Price, order)
 	} else {
-		ob.PlaceMarketOrder(order) // price not needed as market order already executes against the best price
+		matches := ob.PlaceMarketOrder(order) // price not needed as market order already executes against the best price
+		fmt.Println("Got matches ", len(matches))
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
@@ -85,8 +87,10 @@ type Order struct {
 }
 
 type OrderBookData struct {
-	Asks []*Order
-	Bids []*Order
+	TotalBidVolume  float64
+	TotalAskVolumne float64
+	Asks            []*Order
+	Bids            []*Order
 }
 
 func (ex *Exchange) handleGetBook(ctx *fasthttp.RequestCtx) {
@@ -101,8 +105,10 @@ func (ex *Exchange) handleGetBook(ctx *fasthttp.RequestCtx) {
 	}
 
 	orderbookData := OrderBookData{
-		Asks: []*Order{},
-		Bids: []*Order{},
+		Asks:            []*Order{},
+		Bids:            []*Order{},
+		TotalBidVolume:  ob.BidTotalVolume(),
+		TotalAskVolumne: ob.AskTotalVolume(),
 	}
 
 	for _, limit := range ob.Asks() {
