@@ -73,3 +73,12 @@ func TestPlaceMarketOrderMultiFill(t *testing.T) {
 	assert(t, len(ob.bids), 1)
 
 }
+
+func TestCancelOrder(t *testing.T) {
+	ob := NewOrderBook()
+	buyOrder := NewOrder(true, 5)
+	ob.PlaceLimitOrder(10_000, buyOrder)
+	assert(t, ob.BidTotalVolume(), 5.0)
+	ob.CancelOrder(buyOrder)
+	assert(t, ob.BidTotalVolume(), 0.0)
+}

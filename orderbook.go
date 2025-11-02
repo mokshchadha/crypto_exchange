@@ -275,6 +275,11 @@ func (ob *OrderBook) BidTotalVolume() float64 {
 	return totalVolume
 }
 
+func (ob *OrderBook) CancelOrder(o *Order) {
+	limit := o.Limit
+	limit.DeleteOrder(o)
+}
+
 func (ob *OrderBook) AskTotalVolume() float64 {
 	totalVolume := 0.0
 	for i := 0; i < len(ob.asks); i++ {
