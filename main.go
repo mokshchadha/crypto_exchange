@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"exchange/orderbook"
 	"fmt"
+	"strconv"
 
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
@@ -13,6 +14,7 @@ func main() {
 	ex := NewExchange()
 	r := router.New()
 	r.POST("/order", ex.handlePlaceOrder)
+	r.GET("/cancel/{orderId}", ex.handleCancelOrder)
 	r.GET("/books/{marketId}", ex.handleGetBook)
 	fasthttp.ListenAndServe(":3000", r.Handler)
 }
@@ -80,6 +82,7 @@ func (ex *Exchange) handlePlaceOrder(ctx *fasthttp.RequestCtx) {
 }
 
 type Order struct {
+	ID        int64
 	Price     float64
 	Size      float64
 	Bid       bool
@@ -114,6 +117,7 @@ func (ex *Exchange) handleGetBook(ctx *fasthttp.RequestCtx) {
 	for _, limit := range ob.Asks() {
 		for _, order := range limit.Orders {
 			o := Order{
+				ID:        order.ID,
 				Price:     limit.Price,
 				Size:      order.Size,
 				Bid:       order.Bid,
@@ -128,6 +132,7 @@ func (ex *Exchange) handleGetBook(ctx *fasthttp.RequestCtx) {
 	for _, limit := range ob.Bids() {
 		for _, order := range limit.Orders {
 			o := Order{
+				ID:        order.ID,
 				Price:     limit.Price,
 				Size:      order.Size,
 				Bid:       order.Bid,
@@ -148,4 +153,36 @@ func (ex *Exchange) handleGetBook(ctx *fasthttp.RequestCtx) {
 	}
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetBody(jsonData)
+}
+
+type CancelOrderRequest struct {
+}
+
+func (ex *Exchange) handleCancelOrder(ctx *fasthttp.RequestCtx) {
+	orderIdStr := ctx.UserValue("orderId").(string)
+	orderId, err := strconv.ParseInt(orderIdStr, 10, 64)
+
+	if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(`{"error": "Invalid order ID"}`)
+		return
+	}
+
+	ob := ex.orderbooks[MarketETH]
+	orderCancelled := false
+	for _, limit := range ob.Asks() {
+		for _, order := range limit.Orders {
+			if order.ID == orderId {
+				orderCancelled = true
+				ob.CancelOrder(order)
+			}
+
+			if orderCancelled {
+				break
+			}
+		}
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBodyString(`{"msg": "Order deleted successfully"}`)
 }

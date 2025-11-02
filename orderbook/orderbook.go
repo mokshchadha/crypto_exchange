@@ -2,6 +2,7 @@ package orderbook
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"sort"
 	"time"
 )
@@ -14,6 +15,7 @@ type Match struct { // always match a bid w a Ask and vice versa
 }
 
 type Order struct {
+	ID        int64
 	Size      float64
 	Bid       bool
 	Limit     *Limit
@@ -22,6 +24,7 @@ type Order struct {
 
 func NewOrder(bid bool, size float64) *Order {
 	return &Order{
+		ID:        int64(rand.Int64()),
 		Bid:       bid,
 		Size:      size,
 		Timestamp: time.Now().UnixNano(),
