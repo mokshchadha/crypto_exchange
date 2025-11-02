@@ -70,6 +70,6 @@ func TestPlaceMarketOrderMultiFill(t *testing.T) {
 	matches := ob.PlaceMarketOrder(sellOrder)
 	assert(t, ob.BidTotalVolume(), 4.0)
 	assert(t, len(matches), 3) // limit is bucket of order at same price
-	assert(t, len(ob.bids), 1) // --- test failiig here
+	assert(t, len(ob.bids), 1)
 
 }
