@@ -71,9 +71,9 @@ func (ex *Exchange) handlePlaceOrder(ctx *fasthttp.RequestCtx) {
 	ob := ex.orderbooks[market]
 	order := orderbook.NewOrder(placeOrderReq.Bid, placeOrderReq.Size)
 	if placeOrderReq.Type == LimiteOrder {
-		ob.PlaceLimitOrder(placeOrderReq.Price, order)
+		ob.PlaceLimitOrder(placeOrderReq.Price, order) // sell or buy at a particular price (lower or higher) is limit order
 	} else {
-		matches := ob.PlaceMarketOrder(order) // price not needed as market order already executes against the best price
+		matches := ob.PlaceMarketOrder(order) // execute immediately on best available price (hence price is not needed cause it is decided by the market)
 		fmt.Println("Got matches ", len(matches))
 	}
 
