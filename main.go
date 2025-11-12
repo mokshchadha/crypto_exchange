@@ -55,6 +55,12 @@ type PlaceOrderRequest struct {
 	Market Market
 }
 
+type MatchedOrder struct {
+	Price float64
+	Size  float64
+	ID    int64
+}
+
 func (ex *Exchange) handlePlaceOrder(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json")
 	body := ctx.PostBody()
@@ -74,7 +80,32 @@ func (ex *Exchange) handlePlaceOrder(ctx *fasthttp.RequestCtx) {
 		ob.PlaceLimitOrder(placeOrderReq.Price, order) // sell or buy at a particular price (lower or higher) is limit order
 	} else {
 		matches := ob.PlaceMarketOrder(order) // execute immediately on best available price (hence price is not needed cause it is decided by the market)
-		fmt.Println("Got matches ", len(matches))
+		matchedOrders := make([]*MatchedOrder, len(matches))
+
+		isBid := false
+		if order.Bid {
+			isBid = true
+		}
+
+		for i := 0; i < len(matches); i++ {
+
+			matchId := matches[i].Bid.ID
+			if isBid {
+				matchId = matches[i].Ask.ID
+			}
+			matchedOrders[i] = &MatchedOrder{
+				Size:  matches[i].SizeFilled,
+				Price: matches[i].Price,
+				ID:    matchId,
+			}
+		}
+		jsonData, err := json.Marshal(matchedOrders)
+		if err != nil {
+			fmt.Println("Could not marshal the matchedOrders")
+		}
+		ctx.SetStatusCode(fasthttp.StatusOK)
+		ctx.SetBody(jsonData)
+		return
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
