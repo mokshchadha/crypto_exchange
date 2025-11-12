@@ -14,7 +14,7 @@ func main() {
 	ex := NewExchange()
 	r := router.New()
 	r.POST("/order", ex.handlePlaceOrder)
-	r.GET("/cancel/{orderId}", ex.handleCancelOrder)
+	r.POST("/cancel/{orderId}", ex.handleCancelOrder)
 	r.GET("/books/{marketId}", ex.handleGetBook)
 	fasthttp.ListenAndServe(":3000", r.Handler)
 }
@@ -168,20 +168,16 @@ func (ex *Exchange) handleCancelOrder(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ob := ex.orderbooks[MarketETH]
-	orderCancelled := false
-	for _, limit := range ob.Asks() {
-		for _, order := range limit.Orders {
-			if order.ID == orderId {
-				orderCancelled = true
-				ob.CancelOrder(order)
-			}
+	ob, ok := ex.orderbooks[MarketETH]
 
-			if orderCancelled {
-				break
-			}
-		}
+	if !ok {
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(`{"error": "Order book not found"}`)
+		return
 	}
+
+	order := ob.Orders[orderId]
+	ob.CancelOrder(order)
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetBodyString(`{"msg": "Order deleted successfully"}`)
