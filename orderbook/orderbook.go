@@ -16,18 +16,20 @@ type Match struct { // always match a bid w a Ask and vice versa
 
 type Order struct {
 	ID        int64
+	UserId    int64
 	Size      float64
 	Bid       bool
 	Limit     *Limit
 	Timestamp int64
 }
 
-func NewOrder(bid bool, size float64) *Order {
+func NewOrder(bid bool, size float64, userId int64) *Order {
 	return &Order{
 		ID:        int64(rand.Int64()),
 		Bid:       bid,
 		Size:      size,
 		Timestamp: time.Now().UnixNano(),
+		UserId:    userId,
 	}
 }
 
